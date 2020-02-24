@@ -1,5 +1,5 @@
 {
-    "name": "ResNet_cc_ce_760_noscale",
+    "name": "ResNet_cc_dice_760_2class_noscale",
     "n_gpu": 1,
     "use_synch_bn": true,
 
@@ -13,7 +13,7 @@
     },
 
     "train_loader": {
-        "type": "CityScapes",
+        "type": "CityScapes2c",
         "args":{
             "data_dir": "/home/labs/waic/rotems/data/ccityscape/4deeplab/",
             "batch_size": 8,
@@ -30,7 +30,7 @@
     },
 
     "val_loader": {
-        "type": "CityScapes",
+        "type": "CityScapes2c",
         "args":{
             "data_dir": "/home/labs/waic/rotems/data/ccityscape/4deeplab",
             "batch_size": 8,
@@ -51,7 +51,7 @@
         }
     },
 
-    "loss": "CrossEntropyLoss2d",
+    "loss": "DiceLoss",
     "ignore_index": 255,
     "lr_scheduler": {
         "type": "Poly",
