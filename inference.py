@@ -97,8 +97,8 @@ def main():
 
     # Dataset used for training the model
     dataset_type = config['train_loader']['type']
-    assert dataset_type in ['VOC', 'COCO', 'CityScapes', 'ADE20K']
-    if dataset_type == 'CityScapes': 
+    assert dataset_type in ['VOC', 'COCO', 'CityScapes', 'ADE20K', 'CityScapes2c', 'CityScapesRGBD']
+    if dataset_type == 'CityScapes'or dataset_type == 'CityScapes2c' or dataset_type == 'CityScapesRGBD':
         scales = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25] 
     else:
         scales = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
