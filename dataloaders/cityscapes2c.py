@@ -44,13 +44,13 @@ ID_TO_TRAINID = {-1: ignore_label,
                  29: ignore_label, 30: ignore_label,
                  31: 0, 32: 0, 33: 0}
 
-class CityScapesDataset(BaseDataSet):
+class CityScapesDataset2c(BaseDataSet):
     def __init__(self, mode='fine', **kwargs):
         self.num_classes = 2
         self.mode = mode
         self.palette = palette.CityScpates_palette
         self.id_to_trainId = ID_TO_TRAINID
-        super(CityScapesDataset, self).__init__(**kwargs)
+        super(CityScapesDataset2c, self).__init__(**kwargs)
 
     def _set_files(self):
         assert (self.mode == 'fine' and self.split in ['train', 'val']) or \
@@ -83,7 +83,7 @@ class CityScapesDataset(BaseDataSet):
 
 
 
-class CityScapes(BaseDataLoader):
+class CityScapes2c(BaseDataLoader):
     def __init__(self, data_dir, batch_size, split, crop_size=None, base_size=None, scale=True, num_workers=1, mode='fine', val=False,
                     shuffle=False, flip=False, rotate=False, blur= False, augment=False, val_split= None, return_id=False):
 
@@ -106,7 +106,7 @@ class CityScapes(BaseDataLoader):
             'val': val
         }
 
-        self.dataset = CityScapesDataset(mode=mode, **kwargs)
-        super(CityScapes, self).__init__(self.dataset, batch_size, shuffle, num_workers, val_split)
+        self.dataset = CityScapesDataset2c(mode=mode, **kwargs)
+        super(CityScapes2c, self).__init__(self.dataset, batch_size, shuffle, num_workers, val_split)
 
 
