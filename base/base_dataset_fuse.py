@@ -37,7 +37,7 @@ class BaseDataSetFuse(Dataset):
     def _load_data(self, index):
         raise NotImplementedError
 
-    def _val_augmentation(self, image, label):
+    def _val_augmentation(self, image, label, disp):
         if self.crop_size:
             h, w = label.shape
             # Scale the smaller side to crop size
@@ -50,6 +50,8 @@ class BaseDataSetFuse(Dataset):
             label = Image.fromarray(label).resize((w, h), resample=Image.NEAREST)
             label = np.asarray(label, dtype=np.int32)
 
+            disp = cv2.resize(disp, (w, h), interpolation=cv2.INTER_LINEAR)
+
             # Center Crop
             h, w = label.shape
             start_h = (h - self.crop_size )// 2
@@ -58,9 +60,11 @@ class BaseDataSetFuse(Dataset):
             end_w = start_w + self.crop_size
             image = image[start_h:end_h, start_w:end_w]
             label = label[start_h:end_h, start_w:end_w]
-        return image, label
+            disp = disp[start_h:end_h, start_w:end_w]
 
-    def _augmentation(self, image, label):
+        return image, label, disp
+
+    def _augmentation(self, image, label, disp):
         h, w, _ = image.shape
         # Scaling, we set the bigger to base size, and the smaller 
         # one is rescaled to maintain the same ratio, if we don't have any obj in the image, re-do the processing
@@ -72,6 +76,7 @@ class BaseDataSetFuse(Dataset):
             h, w = (longside, int(1.0 * longside * w / h + 0.5)) if h > w else (int(1.0 * longside * h / w + 0.5), longside)
             image = cv2.resize(image, (w, h), interpolation=cv2.INTER_LINEAR)
             label = cv2.resize(label, (w, h), interpolation=cv2.INTER_NEAREST)
+            disp = cv2.resize(disp, (w, h), interpolation=cv2.INTER_LINEAR)
     
         h, w, _ = image.shape
         # Rotate the image with an angle between -10 and 10
@@ -81,6 +86,7 @@ class BaseDataSetFuse(Dataset):
             rot_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
             image = cv2.warpAffine(image, rot_matrix, (w, h), flags=cv2.INTER_LINEAR)#, borderMode=cv2.BORDER_REFLECT)
             label = cv2.warpAffine(label, rot_matrix, (w, h), flags=cv2.INTER_NEAREST)#,  borderMode=cv2.BORDER_REFLECT)
+            disp = cv2.warpAffine(disp, rot_matrix, (w, h), flags=cv2.INTER_NEAREST)#,  borderMode=cv2.BORDER_REFLECT)
 
         # Padding to return the correct crop size
         if self.crop_size:
@@ -95,6 +101,8 @@ class BaseDataSetFuse(Dataset):
             if pad_h > 0 or pad_w > 0:
                 image = cv2.copyMakeBorder(image, value=0, **pad_kwargs)
                 label = cv2.copyMakeBorder(label, value=0, **pad_kwargs)
+                disp = cv2.copyMakeBorder(disp, value=0, **pad_kwargs)
+
             
             # Cropping 
             h, w, _ = image.shape
@@ -104,12 +112,16 @@ class BaseDataSetFuse(Dataset):
             end_w = start_w + self.crop_size
             image = image[start_h:end_h, start_w:end_w]
             label = label[start_h:end_h, start_w:end_w]
+            disp = disp[start_h:end_h, start_w:end_w]
+
 
         # Random H flip
         if self.flip:
             if random.random() > 0.5:
                 image = np.fliplr(image).copy()
                 label = np.fliplr(label).copy()
+                disp = np.fliplr(disp).copy()
+
 
         # Gaussian Blud (sigma between 0 and 1.5)
         if self.blur:
@@ -117,7 +129,7 @@ class BaseDataSetFuse(Dataset):
             ksize = int(3.3 * sigma)
             ksize = ksize + 1 if ksize % 2 == 0 else ksize
             image = cv2.GaussianBlur(image, (ksize, ksize), sigmaX=sigma, sigmaY=sigma, borderType=cv2.BORDER_REFLECT_101)
-        return image, label
+        return image, label, disp
         
     def __len__(self):
         return len(self.files)
@@ -125,9 +137,9 @@ class BaseDataSetFuse(Dataset):
     def __getitem__(self, index):
         image, label, image_id, disp = self._load_data(index)
         if self.val:
-            image, label = self._val_augmentation(image, label) ##TODO solve cropping / aug
+            image, label, disp = self._val_augmentation(image, label, disp) ##TODO solve cropping / aug
         elif self.augment:
-            image, label = self._augmentation(image, label)
+            image, label, disp = self._augmentation(image, label, disp)
 
         disp = torch.from_numpy(np.array(disp, dtype=np.float32))
         label = torch.from_numpy(np.array(label, dtype=np.int32)).long()
