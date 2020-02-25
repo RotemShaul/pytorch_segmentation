@@ -16,10 +16,13 @@ def get_weights(target):
     classes, counts = np.unique(t_np, return_counts=True)
     cls_w = np.median(counts) / counts
     #cls_w = class_weight.compute_class_weight('balanced', classes, t_np)
-
-    weights = np.ones(7)
-    weights[classes] = cls_w
-    return torch.from_numpy(weights).float().cuda()
+    #print("classes {}".format(classes))
+    #print("counts {}".format(counts))
+    #print("cls_w {}".format(cls_w))
+    #weights = np.ones(2)
+    #weights[classes] = cls_w
+    #print("weights {}".format(weights))
+    return torch.from_numpy(cls_w).float().cuda()
 
 class CrossEntropyLoss2dWeight(nn.Module):
     def __init__(self, weight=None, ignore_index=255, reduction='mean'):
