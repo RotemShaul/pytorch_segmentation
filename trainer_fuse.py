@@ -119,10 +119,10 @@ class TrainerFuse(BaseTrainer):
         tbar = tqdm(self.val_loader, ncols=130)
         with torch.no_grad():
             val_visual = []
-            for batch_idx, (data, target) in enumerate(tbar):
+            for batch_idx, (data, target, disp) in enumerate(tbar):
                 #data, target = data.to(self.device), target.to(self.device)
                 # LOSS
-                output = self.model(data)
+                output = self.model(data, disp)
                 loss = self.loss(output, target)
                 if isinstance(self.loss, torch.nn.DataParallel):
                     loss = loss.mean()
