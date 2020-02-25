@@ -1,4 +1,4 @@
-from base import BaseDataSetFuse, BaseDataLoader
+from base import BaseDataSetFuse, BaseDataLoaderFuse
 from utils import palette
 from glob import glob
 import numpy as np
@@ -94,7 +94,7 @@ class CityScapesDatasetRGBD(BaseDataSetFuse):
 
 
 
-class CityScapesRGBD(BaseDataLoader):
+class CityScapesRGBD(BaseDataLoaderFuse):
     def __init__(self, data_dir, batch_size, split, crop_size=None, base_size=None, scale=True, num_workers=1, mode='fine', val=False,
                     shuffle=False, flip=False, rotate=False, blur= False, augment=False, val_split= None, return_id=False):
 

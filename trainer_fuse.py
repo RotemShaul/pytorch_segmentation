@@ -4,7 +4,7 @@ import numpy as np
 from torchvision.utils import make_grid
 from torchvision import transforms
 from utils import transforms as local_transforms
-from base import BaseTrainer, DataPrefetcher
+from base import BaseTrainer, DataPrefetcherFuse
 from utils.helpers import colorize_mask
 from utils.metrics import eval_metrics, AverageMeter
 from tqdm import tqdm
@@ -29,8 +29,8 @@ class TrainerFuse(BaseTrainer):
         
         if self.device ==  torch.device('cpu'): prefetch = False
         if prefetch:
-            self.train_loader = DataPrefetcher(train_loader, device=self.device)
-            self.val_loader = DataPrefetcher(val_loader, device=self.device)
+            self.train_loader = DataPrefetcherFuse(train_loader, device=self.device)
+            self.val_loader = DataPrefetcherFuse(val_loader, device=self.device)
 
         torch.backends.cudnn.benchmark = True
 
