@@ -1,5 +1,5 @@
 {
-    "name": "ResNet_fuse_cc_ce_2class_test_760_noscale",
+    "name": "ResNet_fuse_cc_ce_2class_760_noscale",
     "n_gpu": 1,
     "use_synch_bn": true,
 
@@ -59,7 +59,7 @@
     },
 
     "trainer": {
-        "epochs": 80,
+        "epochs": 150,
         "save_dir": "/home/labs/waic/rotems/code/pytorch_segmentation/saved/",
         "save_period": 1,
   
@@ -71,6 +71,6 @@
         "log_per_iter": 20,
 
         "val": true,
-        "val_per_epochs": 5
+        "val_per_epochs": 3
     }
 }
