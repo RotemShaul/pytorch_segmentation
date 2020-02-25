@@ -96,11 +96,11 @@ class ResNetFuse(nn.Module):
 
     def forward(self, x, disp):
         disp = disp.unsqueeze(1)
-        d_0 = self.layer0(disp)
-        d_1 = self.layer1(d_0)
-        d_2 = self.layer2(d_1)
-        d_3 = self.layer3(d_2)
-        d_4 = self.layer4(d_3)
+        d_0 = self.layer0_d(disp)
+        d_1 = self.layer1_d(d_0)
+        d_2 = self.layer2_d(d_1)
+        d_3 = self.layer3_d(d_2)
+        d_4 = self.layer4_d(d_3)
 
         x = self.layer0(x)
         x = torch.add(x, d_0)
