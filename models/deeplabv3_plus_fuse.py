@@ -17,22 +17,20 @@ class ResNetFuse(nn.Module):
         super(ResNetFuse, self).__init__()
 
         # Encoder Depth
-        model = getattr(models, backbone)(pretrained)
-        if not pretrained or in_channels != 3:
-            self.layer0 = nn.Sequential(
-                nn.Conv2d(in_channels, 64, 7, stride=2, padding=3, bias=False),
-                nn.BatchNorm2d(64),
-                nn.ReLU(inplace=True),
-                nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-            )
-            initialize_weights(self.layer0)
-        else:
-            self.layer0 = nn.Sequential(*list(model.children())[:4])
+        model_d = getattr(models, backbone)(pretrained)
+        in_channels_d = 1
+        self.layer0_d = nn.Sequential(
+            nn.Conv2d(in_channels_d, 64, 7, stride=2, padding=3, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        initialize_weights(self.layer0_d)
 
-        self.layer1 = model.layer1
-        self.layer2 = model.layer2
-        self.layer3 = model.layer3
-        self.layer4 = model.layer4
+        self.layer1_d = model_d.layer1
+        self.layer2_d = model_d.layer2
+        self.layer3_d = model_d.layer3
+        self.layer4_d = model_d.layer4
 
         if output_stride == 16:
             s3, s4, d3, d4 = (2, 1, 1, 2)
@@ -40,7 +38,7 @@ class ResNetFuse(nn.Module):
             s3, s4, d3, d4 = (1, 1, 2, 4)
 
         if output_stride == 8:
-            for n, m in self.layer3.named_modules():
+            for n, m in self.layer3_d.named_modules():
                 if 'conv1' in n and (backbone == 'resnet34' or backbone == 'resnet18'):
                     m.dilation, m.padding, m.stride = (d3, d3), (d3, d3), (s3, s3)
                 elif 'conv2' in n:
@@ -48,7 +46,7 @@ class ResNetFuse(nn.Module):
                 elif 'downsample.0' in n:
                     m.stride = (s3, s3)
 
-        for n, m in self.layer4.named_modules():
+        for n, m in self.layer4_d.named_modules():
             if 'conv1' in n and (backbone == 'resnet34' or backbone == 'resnet18'):
                 m.dilation, m.padding, m.stride = (d4, d4), (d4, d4), (s4, s4)
             elif 'conv2' in n:
@@ -96,13 +94,24 @@ class ResNetFuse(nn.Module):
             elif 'downsample.0' in n:
                 m.stride = (s4, s4)
 
-    def forward(self, x):
+    def forward(self, x, disp):
+        d_0 = self.layer0(disp)
+        d_1 = self.layer1(d_0)
+        d_2 = self.layer2(d_1)
+        d_3 = self.layer3(d_2)
+        d_4 = self.layer4(d_3)
+
         x = self.layer0(x)
+        x = torch.add(x, d_0)
         x = self.layer1(x)
+        x = torch.add(x, d_1)
         low_level_features = x
         x = self.layer2(x)
+        x = torch.add(x, d_2)
         x = self.layer3(x)
+        x = torch.add(x, d_3)
         x = self.layer4(x)
+        x = torch.add(x, d_4)
 
         return x, low_level_features
 
@@ -213,9 +222,9 @@ class DeepLabFuse(BaseModel):
 
         if freeze_bn: self.freeze_bn()
 
-    def forward(self, x):
+    def forward(self, x, disp):
         H, W = x.size(2), x.size(3)
-        x, low_level_features = self.backbone(x)
+        x, low_level_features = self.backbone(x, disp)
         x = self.ASSP(x)
         x = self.decoder(x, low_level_features)
         x = F.interpolate(x, size=(H, W), mode='bilinear', align_corners=True)
