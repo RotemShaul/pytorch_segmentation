@@ -95,6 +95,7 @@ class ResNetFuse(nn.Module):
                 m.stride = (s4, s4)
 
     def forward(self, x, disp):
+        disp = disp.unsqueeze(1)
         d_0 = self.layer0(disp)
         d_1 = self.layer1(d_0)
         d_2 = self.layer2(d_1)
