@@ -1,1 +1,1 @@
-/opt/conda/bin/python /home/labs/waic/rotems/code/pytorch_segmentation/train.py --config /home/labs/waic/rotems/code/pytorch_segmentation/cc_ce_config.json --resume /home/labs/waic/rotems/code/pytorch_segmentation/saved/ResNet_cc_ce_760_noscale/02-24_20-17/best_model.pth
+/opt/conda/bin/python /home/labs/waic/rotems/code/pytorch_segmentation/train.py --config /home/labs/waic/rotems/code/pytorch_segmentation/cc_ce_config.json 

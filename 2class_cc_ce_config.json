@@ -1,5 +1,5 @@
 {
-    "name": "ResNet_cc_ce_2class_760_noscale_weights",
+    "name": "ResNet_cc_ce_2class_760_noscale_ohem",
     "n_gpu": 1,
     "use_synch_bn": true,
 
@@ -51,7 +51,7 @@
         }
     },
 
-    "loss": "CrossEntropyLoss2dWeight",
+    "loss": "CEOhem",
     "ignore_index": 255,
     "lr_scheduler": {
         "type": "Poly",

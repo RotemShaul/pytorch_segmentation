@@ -1,19 +1,19 @@
 {
-    "name": "ResNet_fuse_cc_ce_2class_760_noscale",
+    "name": "ResNet_fuse_cc_focal_2class_760_noscale_19c",
     "n_gpu": 1,
     "use_synch_bn": true,
 
     "arch": {
         "type": "DeepLabFuse",
         "args": {
-            "backbone": "resnet50",
+            "backbone": "resnet101",
             "freeze_bn": false,
             "freeze_backbone": false
         }
     },
 
     "train_loader": {
-        "type": "CityScapesRGBD",
+        "type": "CityScapesDatasetRGBD19c",
         "args":{
             "data_dir": "/home/labs/waic/rotems/data/ccityscape/4deeplab/",
             "batch_size": 8,
@@ -30,7 +30,7 @@
     },
 
     "val_loader": {
-        "type": "CityScapesRGBD",
+        "type": "CityScapesDatasetRGBD19c",
         "args":{
             "data_dir": "/home/labs/waic/rotems/data/ccityscape/4deeplab",
             "batch_size": 8,

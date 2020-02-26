@@ -47,7 +47,7 @@ class CrossEntropyLoss2d(nn.Module):
 
 class CEOhem(nn.Module):
     def __init__(self, weight=None, ignore_index=255, reduction='mean'):
-        super(CrossEntropyLoss2d, self).__init__()
+        super(CEOhem, self).__init__()
         reduction = 'none'
         self.CE = nn.CrossEntropyLoss(weight=weight, ignore_index=ignore_index, reduction=reduction)
         self.device = 0
