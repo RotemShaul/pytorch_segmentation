@@ -19,7 +19,7 @@ ID_TO_TRAINID = {-1: ignore_label, 0: ignore_label, 1: ignore_label, 2: ignore_l
 
 class CityScapesDatasetRGBD19c(BaseDataSetFuse):
     def __init__(self, mode='fine', **kwargs):
-        self.num_classes = 2
+        self.num_classes = 19
         self.mode = mode
         self.palette = palette.CityScpates_palette
         self.id_to_trainId = ID_TO_TRAINID
