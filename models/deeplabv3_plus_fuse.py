@@ -7,10 +7,21 @@ from torchvision import models
 import torch.utils.model_zoo as model_zoo
 from utils.helpers import initialize_weights
 from itertools import chain
-
+from models.resnet import model_urls
 ''' 
 -> ResNet BackBone
 '''
+
+
+def _load_pretrained(model, url, inchans=3):
+    state_dict = model_zoo.load_url(url)
+    if inchans == 1:
+        conv1_weight = state_dict['conv1.weight']
+        state_dict['conv1.weight'] = conv1_weight.sum(dim=1, keepdim=True)
+    elif inchans != 3:
+        assert False, "Invalid number of inchans for pretrained weights"
+    model.load_state_dict(state_dict)
+
 
 class ResNetFuse(nn.Module):
     def __init__(self, in_channels=3, output_stride=16, backbone='resnet101', pretrained=True):
@@ -19,13 +30,16 @@ class ResNetFuse(nn.Module):
         # Encoder Depth
         model_d = getattr(models, backbone)(pretrained)
         in_channels_d = 1
-        self.layer0_d = nn.Sequential(
-            nn.Conv2d(in_channels_d, 64, 7, stride=2, padding=3, bias=False),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        )
-        initialize_weights(self.layer0_d)
+        _load_pretrained(model_d, model_urls[backbone], inchans=in_channels_d)
+        self.layer0_d = nn.Sequential(*list(model_d.children())[:4])
+
+        #self.layer0_d = nn.Sequential(
+        #    nn.Conv2d(in_channels_d, 64, 7, stride=2, padding=3, bias=False),
+        #    nn.BatchNorm2d(64),
+        #    nn.ReLU(inplace=True),
+        #    nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        #)
+        #initialize_weights(self.layer0_d)
 
         self.layer1_d = model_d.layer1
         self.layer2_d = model_d.layer2
