@@ -13,8 +13,8 @@ from models.resnet import model_urls
 '''
 
 
-def _load_pretrained(model, url, inchans=3):
-    state_dict = model_zoo.load_url(url)
+def _load_pretrained(model, url, inchans=1):
+    state_dict = model.state_dict() #model_zoo.load_url(url)
     if inchans == 1:
         conv1_weight = state_dict['conv1.weight']
         state_dict['conv1.weight'] = conv1_weight.sum(dim=1, keepdim=True)
@@ -30,15 +30,23 @@ class ResNetFuse(nn.Module):
         # Encoder Depth
         model_d = getattr(models, backbone)(pretrained)
         in_channels_d = 1
-        _load_pretrained(model_d, model_urls[backbone], inchans=in_channels_d)
-        self.layer0_d = nn.Sequential(*list(model_d.children())[:4])
+        
+        state_dict = model_d.state_dict()
+        conv1_weight = state_dict['conv1.weight']
+        conv1_weight = conv1_weight.mean(dim=1, keepdim=True)
+        conv2d_first = nn.Conv2d(in_channels_d, 64, 7, stride=2, padding=3, bias=False)
+        conv2d_first.weight.data = conv1_weight
 
-        #self.layer0_d = nn.Sequential(
-        #    nn.Conv2d(in_channels_d, 64, 7, stride=2, padding=3, bias=False),
-        #    nn.BatchNorm2d(64),
-        #    nn.ReLU(inplace=True),
-        #    nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        #)
+        #print("backbone {}".format(backbone))
+        #_load_pretrained(model_d, model_urls[backbone], inchans=in_channels_d)
+        # self.layer0_d = nn.Sequential(*list(model_d.children())[:4])
+
+        self.layer0_d = nn.Sequential(
+            conv2d_first,
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
         #initialize_weights(self.layer0_d)
 
         self.layer1_d = model_d.layer1
@@ -225,7 +233,7 @@ class DeepLabFuse(BaseModel):
         super(DeepLabFuse, self).__init__()
         assert ('xception' or 'resnet' in backbone)
         if 'resnet' in backbone:
-            self.backbone = ResNetFuse(in_channels=in_channels, output_stride=output_stride, pretrained=pretrained)
+            self.backbone = ResNetFuse(in_channels=in_channels, output_stride=output_stride, pretrained=pretrained, backbone=backbone)
             low_level_channels = 256
         else:
             print("Error xception not supported for fuse")
