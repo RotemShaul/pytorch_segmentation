@@ -1,10 +1,10 @@
 {
-    "name": "ResNet_cc_ce_760_noscale_101",
+    "name": "ResNet_cc_ce_760_noscale_101_fuse_19c",
     "n_gpu": 1,
     "use_synch_bn": true,
 
     "arch": {
-        "type": "DeepLab",
+        "type": "DeepLabFuse",
         "args": {
             "backbone": "resnet101",
             "freeze_bn": false,
@@ -13,7 +13,7 @@
     },
 
     "train_loader": {
-        "type": "CityScapes",
+        "type": "CityScapesRGBD19c",
         "args":{
             "data_dir": "/home/labs/waic/rotems/data/ccityscape/4deeplab/",
             "batch_size": 8,
@@ -30,7 +30,7 @@
     },
 
     "val_loader": {
-        "type": "CityScapes",
+        "type": "CityScapesRGBD19c",
         "args":{
             "data_dir": "/home/labs/waic/rotems/data/ccityscape/4deeplab",
             "batch_size": 8,

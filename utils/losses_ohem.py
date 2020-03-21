@@ -52,39 +52,51 @@ class CEOhem(nn.Module):
         self.CE = nn.CrossEntropyLoss(weight=weight, ignore_index=ignore_index, reduction=reduction)
         self.device = 0
         self.ratio = 3
-
+        
     def forward(self, output, target):
         x_ = output.clone()  #.flatten().to(self.device)
-        y_ = target.clone().flatten().to(self.device)
+        y_ = target.clone() #flatten().to(self.device)
 
-        # print("x, y {} {}".format(x_.size(), y_.size()))
+        #print("x, y {} {}".format(x_.size(), y_.size()))
 
         x_pos = x_.to(self.device)
         x_pos_0 = x_pos[:, 0, :, :].to(self.device)
         x_pos_1 = x_pos[:, 1, :, :].to(self.device)
-        x_pos_0 = x_pos_0.flatten().to(self.device)
-        x_pos_1 = x_pos_1.flatten().to(self.device)
 
-        x_pos_final = torch.stack((x_pos_0[y_ == 1], x_pos_1[y_ == 1])).permute(1, 0).to(self.device)
+        #print("xpos0, xpos1, y {} {} {}".format(x_pos_0.size(), x_pos_1.size(), y_.size()))
+
+        x_pos_0 = x_pos_0[y_ == 1]
+        x_pos_1 = x_pos_1[y_ == 1]
+        #print(x_pos_0.size())
+        #print(x_pos_1.size())
+        x_pos_final = torch.stack((x_pos_0, x_pos_1)).to(self.device)
+
+        #print("x, y {} {}".format(x_pos_final.size(), y_.size()))
         y_pos = torch.ones(x_pos_final.size(0)).to(self.device)
+        
         x_neg = x_.to(self.device)
         x_neg_0 = x_neg[:, 0, :, :].to(self.device)
         x_neg_1 = x_neg[:, 1, :, :].to(self.device)
-        x_neg_0 = x_neg_0.flatten().to(self.device)
-        x_neg_1 = x_neg_1.flatten().to(self.device)
-        x_neg_final = torch.stack((x_neg_0[y_ == 0], x_neg_1[y_ == 0])).permute(1, 0).to(self.device)
-        y_neg = torch.zeros(x_neg_final.size(0)).to(self.device)
+        
+        #print("xneg0, xneg1, y {} {} {}".format(x_neg_0.size(), x_neg_1.size(), y_.size()))
+        x_neg_0 = x_neg_0[y_ == 0]
+        x_neg_1 = x_neg_1[y_ == 0]
+        #print(x_neg_0.size())
+        #print(x_neg_1.size())
+        x_neg_final = torch.stack((x_neg_0, x_neg_1)).to(self.device)
 
+        #print("x, y {} {}".format(x_neg_final.size(), y_.size()))
+        y_neg = torch.ones(x_neg_final.size(0)).to(self.device)
+        
         pos_losses = self.CE(x_pos_final, y_pos.long()).mean()  # we need the gradients
 
+        print("numel {}".format(x_pos_final.numel()))
         with torch.no_grad():
             neg_losses = self.CE(x_neg_final, y_neg.long())
 
         _, idxs = neg_losses.topk(min(x_pos_final.numel() * self.ratio, neg_losses.numel()))
         neg_losses_topk = self.CE(x_neg_final[idxs], y_neg[idxs].long()).mean()
 
-        normal_loss = self.CE(output, target).mean().item()
-        print("Normal Loss {}".format(normal_loss))
         # return {
         #    'loss': (3 * neg_losses_topk + pos_losses) / 4,
         #    'pos_loss': pos_losses.item(),
@@ -94,7 +106,7 @@ class CEOhem(nn.Module):
         # }
 
         # loss = 3 * neg_losses_topk + pos_losses) / 4
-        loss = (neg_losses_topk + (self.ratio * pos_losses)) / 4
+        loss = (neg_losses_topk + (3 * pos_losses)) / 4
         return loss
 
 class DiceLoss(nn.Module):
