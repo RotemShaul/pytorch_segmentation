@@ -29,7 +29,7 @@ class ResNetFuse(nn.Module):
 
         # Encoder Depth
         model_d = getattr(models, backbone)(pretrained)
-        in_channels_d = 1
+        in_channels_d = 2
         
         state_dict = model_d.state_dict()
         conv1_weight = state_dict['conv1.weight']
