@@ -33,7 +33,7 @@ class LowWiresDataset(BaseDataSetFuse):
 
         label_path = os.path.join(self.root, labels_dir_name, self.split)
         image_path = os.path.join(self.root, img_dir_name, self.split)
-        assert os.listdir(image_path) == os.listdir(label_path)
+        assert len(os.listdir(image_path)) == len(os.listdir(label_path))
 
         ###
         image_paths, label_paths = [], []
