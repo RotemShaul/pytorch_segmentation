@@ -34,6 +34,7 @@ class ResNetFuse(nn.Module):
         state_dict = model_d.state_dict()
         conv1_weight = state_dict['conv1.weight']
         conv1_weight = conv1_weight.mean(dim=1, keepdim=True)
+        conv1_weight = torch.cat((conv1_weight, conv1_weight), 1)
         conv2d_first = nn.Conv2d(in_channels_d, 64, 7, stride=2, padding=3, bias=False)
         conv2d_first.weight.data = conv1_weight
 
