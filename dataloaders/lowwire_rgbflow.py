@@ -54,7 +54,6 @@ class LowWiresDatasetRGBFlow(BaseDataSetFuse):
         else:
             w = np.fromfile(f, np.int32, count=1)[0]
             h = np.fromfile(f, np.int32, count=1)[0]
-            print('Reading %d x %d flo file' % (w, h))
             data = np.fromfile(f, np.float32, count=2 * w * h)
             # Reshape data into 3D array (columns, rows, bands)
             data2D = np.resize(data, (h, w, 2))
