@@ -78,14 +78,14 @@ class LowWiresRGBFlow(BaseDataLoaderFuse):
     def __init__(self, data_dir, batch_size, split, crop_size=None, base_size=None, scale=True, num_workers=1, mode='fine', val=False,
                     shuffle=False, flip=False, rotate=False, blur= False, augment=False, val_split= None, return_id=False):
 
-        #self.MEAN = [0.28689529, 0.32513294, 0.28389176]
-        #self.STD = [0.17613647, 0.18099176, 0.17772235]
+        self.MEAN = [0.28689529, 0.32513294, 0.28389176]
+        self.STD = [0.17613647, 0.18099176, 0.17772235]
 
         kwargs = {
             'root': data_dir,
             'split': split,
-         #   'mean': self.MEAN,
-         #   'std': self.STD,
+            'mean': self.MEAN,
+            'std': self.STD,
             'augment': augment,
             'crop_size': crop_size,
             'base_size': base_size,
