@@ -1,4 +1,4 @@
-from base import BaseDataSetFuse, BaseDataLoaderFuse
+from base import BaseDataSet, BaseDataLoader
 from utils import palette
 from glob import glob
 import numpy as np
@@ -15,7 +15,7 @@ ID_TO_TRAINID = {-1: ignore_label,
                  0: ignore_label,
                  255: 1}
 
-class LowWiresDataset(BaseDataSetFuse):
+class LowWiresDataset(BaseDataSet):
     def __init__(self, mode='fine', **kwargs):
         self.num_classes = 2
         self.mode = mode
@@ -55,7 +55,7 @@ class LowWiresDataset(BaseDataSetFuse):
 
 
 
-class LowWires(BaseDataLoaderFuse):
+class LowWires(BaseDataLoader):
     def __init__(self, data_dir, batch_size, split, crop_size=None, base_size=None, scale=True, num_workers=1, mode='fine', val=False,
                     shuffle=False, flip=False, rotate=False, blur= False, augment=False, val_split= None, return_id=False):
 
