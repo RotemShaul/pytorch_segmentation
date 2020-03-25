@@ -50,6 +50,9 @@ class LowWiresDataset(BaseDataSet):
         label = np.asarray(Image.open(label_path), dtype=np.int32)
         for k, v in self.id_to_trainId.items():
             label[label == k] = v
+        
+        image = image[:,9:1929]
+        label = label[:,9:1929]
 
         return image, label, image_id
 

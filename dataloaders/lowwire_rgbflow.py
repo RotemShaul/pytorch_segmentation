@@ -36,7 +36,7 @@ class LowWiresDatasetRGBFlow(BaseDataSetFuse):
         image_path = os.path.join(self.root, img_dir_name, self.split)
         assert len(os.listdir(image_path)) == len(os.listdir(label_path))
         flow_image_path = os.path.join(self.root, flow_dir_name, self.split)
-        assert len(os.listdir(image_path)) == len(os.listdir(flow_image_path))
+        #assert len(os.listdir(image_path)) == len(os.listdir(flow_image_path))
 
         ###
         image_paths, label_paths, flow_paths = [], [], []
@@ -69,6 +69,8 @@ class LowWiresDatasetRGBFlow(BaseDataSetFuse):
             label[label == k] = v
 
         flow_img = self._read_flow(flow_path)
+        image = image[:,9:1929]
+        label = label[:,9:1929]
 
         return image, label, image_id, flow_img
 
