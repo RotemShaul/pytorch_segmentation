@@ -1,10 +1,10 @@
 {
-    "name": "ResNet_wire_ce_760_noscale_101_fuse",
+    "name": "ResNet_wire_ce_760_noscale_101_interactive",
     "n_gpu": 1,
     "use_synch_bn": true,
 
     "arch": {
-        "type": "DeepLabFuse",
+        "type": "DeepLab",
         "args": {
             "backbone": "resnet101",
             "freeze_bn": false,
@@ -13,9 +13,9 @@
     },
 
     "train_loader": {
-        "type": "LowWiresRGBFlow",
+        "type": "LowWires",
         "args":{
-            "data_dir": "/home/labs/waic/rotems/data/ccityscape/4deeplab/",
+            "data_dir": "/home/labs/waic/rotems/data/elbit/lowire/",
             "batch_size": 8,
             "crop_size": 760,
             "augment": true,
@@ -30,9 +30,9 @@
     },
 
     "val_loader": {
-        "type": "LowWiresRGBFlow",
+        "type": "LowWires",
         "args":{
-            "data_dir": "/home/labs/waic/rotems/data/ccityscape/4deeplab",
+            "data_dir": "/home/labs/waic/rotems/data/elbit/lowire/",
             "batch_size": 8,
             "crop_size": 760,
             "val": true,
@@ -51,8 +51,8 @@
         }
     },
 
-    "loss": "CrossEntropyLoss2d",
-    "ignore_index": 255,
+    "loss": "CEOhem",
+    "ignore_index": 100,
     "lr_scheduler": {
         "type": "Poly",
         "args": {}

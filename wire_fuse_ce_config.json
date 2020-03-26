@@ -15,7 +15,7 @@
     "train_loader": {
         "type": "LowWiresRGBFlow",
         "args":{
-            "data_dir": "/home/labs/waic/rotems/data/ccityscape/4deeplab/",
+            "data_dir": "/home/labs/waic/rotems/data/elbit/lowire/",
             "batch_size": 8,
             "crop_size": 760,
             "augment": true,
@@ -32,7 +32,7 @@
     "val_loader": {
         "type": "LowWiresRGBFlow",
         "args":{
-            "data_dir": "/home/labs/waic/rotems/data/ccityscape/4deeplab",
+            "data_dir": "/home/labs/waic/rotems/data/elbit/lowire/",
             "batch_size": 8,
             "crop_size": 760,
             "val": true,
@@ -52,7 +52,7 @@
     },
 
     "loss": "CrossEntropyLoss2d",
-    "ignore_index": 255,
+    "ignore_index": 0,
     "lr_scheduler": {
         "type": "Poly",
         "args": {}
