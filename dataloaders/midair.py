@@ -83,12 +83,12 @@ class MidAirDataset(BaseDataSet):
 
     def _load_data(self, index):
         current_file = self.files[index]
-        filename = self.parent_path + 'color_left/trajectory_5000/' + current_file[0: len(current_file) - 1]
+        filename = self.root + 'color_left/trajectory_5000/' + current_file[0: len(current_file) - 1]
         rgb_image = Image.open(filename)
-        filename = self.parent_path + 'stereo_disparity/trajectory_5000/' + current_file[
+        filename = self.root + 'stereo_disparity/trajectory_5000/' + current_file[
                                                                             0: len(current_file) - 5] + 'PNG'
         disp_img = Image.open(filename)
-        filename = self.parent_path + 'segmentation/trajectory_5000/' + current_file[0: len(current_file) - 5] + 'PNG'
+        filename = self.root + 'segmentation/trajectory_5000/' + current_file[0: len(current_file) - 5] + 'PNG'
         seg_label = Image.open(filename)
 
         rgb_img = np.asarray(rgb_image, np.float32)
