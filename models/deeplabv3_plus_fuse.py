@@ -29,12 +29,11 @@ class ResNetFuse(nn.Module):
 
         # Encoder Depth
         model_d = getattr(models, backbone)(pretrained)
-        in_channels_d = 2
+        in_channels_d = 1
         
         state_dict = model_d.state_dict()
         conv1_weight = state_dict['conv1.weight']
         conv1_weight = conv1_weight.mean(dim=1, keepdim=True)
-        conv1_weight = torch.cat((conv1_weight, conv1_weight), 1)
         conv2d_first = nn.Conv2d(in_channels_d, 64, 7, stride=2, padding=3, bias=False)
         conv2d_first.weight.data = conv1_weight
 
@@ -118,7 +117,7 @@ class ResNetFuse(nn.Module):
                 m.stride = (s4, s4)
 
     def forward(self, x, disp):
-        disp = disp.permute(0,3,1,2)
+        disp = disp.unsqueeze(1)
         d_0 = self.layer0_d(disp)
         d_1 = self.layer1_d(d_0)
         d_2 = self.layer2_d(d_1)
