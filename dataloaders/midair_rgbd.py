@@ -58,7 +58,8 @@ class MidAirRGBDDataset(BaseDataSetFuse):
         disp_img = disp_img.astype(np.float32)
 
         image_id = os.path.splitext(os.path.basename(filename))[0]
-        return rgb_image, seg_label, image_id, disp_img
+        label = np.asarray(seg_label, dtype=np.int32)
+        return rgb_image, label, image_id, disp_img
 
 
 

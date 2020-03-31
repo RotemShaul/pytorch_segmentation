@@ -85,9 +85,6 @@ class MidAirDataset(BaseDataSet):
         current_file = self.files[index]
         filename = self.root + 'color_left/trajectory_5000/' + current_file[0: len(current_file) - 1]
         rgb_image = Image.open(filename)
-        filename = self.root + 'stereo_disparity/trajectory_5000/' + current_file[
-                                                                            0: len(current_file) - 5] + 'PNG'
-        disp_img = Image.open(filename)
         filename = self.root + 'segmentation/trajectory_5000/' + current_file[0: len(current_file) - 5] + 'PNG'
         seg_label = Image.open(filename)
 
@@ -98,13 +95,10 @@ class MidAirDataset(BaseDataSet):
         seg_label[seg_label == 2] = -1  # Tree
         seg_label[seg_label >= 0] = 0
         seg_label[seg_label == -1] = 1 #Tree
-        ######
-        disp_img = np.asarray(disp_img, np.uint16)
-        disp_img.dtype = np.float16
-        disp_img = disp_img.astype(np.float32)
 
         image_id = os.path.splitext(os.path.basename(filename))[0]
-        return rgb_image, seg_label, image_id
+        label = np.asarray(seg_label, dtype=np.int32)
+        return rgb_image, label, image_id
 
         ####
         #image_path, label_path = self.files[index]
