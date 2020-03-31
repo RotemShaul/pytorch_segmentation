@@ -8,3 +8,4 @@ from .cityscapes2c_weighted import CityScapes2cWeighted
 from .cityscapes_rgbd_19c import CityScapesRGBD19c
 from .lowwire_rgbflow import LowWiresRGBFlow
 from .lowwire import LowWires
+from .midair import MidAir
