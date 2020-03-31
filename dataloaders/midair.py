@@ -91,7 +91,7 @@ class MidAirDataset(BaseDataSet):
         filename = self.root + 'segmentation/trajectory_5000/' + current_file[0: len(current_file) - 5] + 'PNG'
         seg_label = Image.open(filename)
 
-        rgb_img = np.asarray(rgb_image, np.float32)
+        rgb_image = np.asarray(rgb_image, np.float32)
         seg_label = np.asarray(seg_label, np.int64)
         ######
         # seg_label[seg_label == 0] = 14 #Give the background class label
