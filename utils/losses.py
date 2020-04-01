@@ -51,7 +51,7 @@ class CEOhem(nn.Module):
         reduction = 'none'
         self.CE = nn.CrossEntropyLoss(weight=weight, ignore_index=ignore_index, reduction=reduction)
         self.device = 0
-        self.ratio = 1
+        self.ratio = 3
 
     def forward(self, output, target):
         x_ = output.clone()  #.flatten().to(self.device)
