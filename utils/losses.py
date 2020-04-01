@@ -52,6 +52,7 @@ class CEOhem(nn.Module):
         self.CE = nn.CrossEntropyLoss(weight=weight, ignore_index=ignore_index, reduction=reduction)
         self.device = 0
         self.ratio = 1
+        print("Using OHEM")
 
     def forward(self, output, target):
         x_ = output.clone()  #.flatten().to(self.device)
@@ -65,14 +66,14 @@ class CEOhem(nn.Module):
         x_pos_0 = x_pos_0.flatten().to(self.device)
         x_pos_1 = x_pos_1.flatten().to(self.device)
 
-        x_pos_final = torch.stack((x_pos_0[y_ == 1], x_pos_1[y_ == 1])).permute(1, 0).to(self.device)
+        x_pos_final = torch.stack((x_pos_0[y_ == 1], x_pos_1[y_ == 1])).to(self.device)
         y_pos = torch.ones(x_pos_final.size(0)).to(self.device)
         x_neg = x_.to(self.device)
         x_neg_0 = x_neg[:, 0, :, :].to(self.device)
         x_neg_1 = x_neg[:, 1, :, :].to(self.device)
         x_neg_0 = x_neg_0.flatten().to(self.device)
         x_neg_1 = x_neg_1.flatten().to(self.device)
-        x_neg_final = torch.stack((x_neg_0[y_ == 0], x_neg_1[y_ == 0])).permute(1, 0).to(self.device)
+        x_neg_final = torch.stack((x_neg_0[y_ == 0], x_neg_1[y_ == 0])).to(self.device)
         y_neg = torch.zeros(x_neg_final.size(0)).to(self.device)
 
         pos_losses = self.CE(x_pos_final, y_pos.long()).mean()  # we need the gradients
