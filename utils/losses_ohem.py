@@ -54,48 +54,66 @@ class CEOhem(nn.Module):
         self.ratio = 3
         
     def forward(self, output, target):
-        x_ = output.clone()  #.flatten().to(self.device)
-        y_ = target.clone() #flatten().to(self.device)
+        x_ = output.clone().flatten().to(self.device)
+        y_ = target.clone().flatten().to(self.device)
+        x_pos = x_[(y_ > 0)].to(self.device)
+        y_pos = torch.ones(x_pos.shape).to(self.device)
+        x_neg = x_[(y_ == 0)].to(self.device)
+        y_neg = torch.zeros(x_neg.shape).to(self.device)
 
-        #print("x, y {} {}".format(x_.size(), y_.size()))
+        # print("#pos: {}/{}".format(x_pos.numel(), x.numel()))
+        pos_losses = self.criterion(x_pos, y_pos).mean()  # we need the gradients
 
-        x_pos = x_.to(self.device)
-        x_pos_0 = x_pos[:, 0, :, :].to(self.device)
-        x_pos_1 = x_pos[:, 1, :, :].to(self.device)
-
-        #print("xpos0, xpos1, y {} {} {}".format(x_pos_0.size(), x_pos_1.size(), y_.size()))
-
-        x_pos_0 = x_pos_0[y_ == 1]
-        x_pos_1 = x_pos_1[y_ == 1]
-        #print(x_pos_0.size())
-        #print(x_pos_1.size())
-        x_pos_final = torch.stack((x_pos_0, x_pos_1)).to(self.device)
-
-        #print("x, y {} {}".format(x_pos_final.size(), y_.size()))
-        y_pos = torch.ones(x_pos_final.size(0)).to(self.device)
-        
-        x_neg = x_.to(self.device)
-        x_neg_0 = x_neg[:, 0, :, :].to(self.device)
-        x_neg_1 = x_neg[:, 1, :, :].to(self.device)
-        
-        #print("xneg0, xneg1, y {} {} {}".format(x_neg_0.size(), x_neg_1.size(), y_.size()))
-        x_neg_0 = x_neg_0[y_ == 0]
-        x_neg_1 = x_neg_1[y_ == 0]
-        #print(x_neg_0.size())
-        #print(x_neg_1.size())
-        x_neg_final = torch.stack((x_neg_0, x_neg_1)).to(self.device)
-
-        #print("x, y {} {}".format(x_neg_final.size(), y_.size()))
-        y_neg = torch.ones(x_neg_final.size(0)).to(self.device)
-        
-        pos_losses = self.CE(x_pos_final, y_pos.long()).mean()  # we need the gradients
-
-        print("numel {}".format(x_pos_final.numel()))
         with torch.no_grad():
-            neg_losses = self.CE(x_neg_final, y_neg.long())
+            neg_losses = self.criterion(x_neg, y_neg)
 
-        _, idxs = neg_losses.topk(min(x_pos_final.numel() * self.ratio, neg_losses.numel()))
-        neg_losses_topk = self.CE(x_neg_final[idxs], y_neg[idxs].long()).mean()
+        _, idxs = neg_losses.topk(min(x_pos.numel() * self.ratio, neg_losses.numel()))
+        neg_losses_topk = self.criterion(x_neg[idxs], y_neg[idxs]).mean()
+
+        return (3 * neg_losses_topk + pos_losses) / 4
+
+#        x_ = output.clone()  #.flatten().to(self.device)
+#        y_ = target.clone() #flatten().to(self.device)
+#
+#        #print("x, y {} {}".format(x_.size(), y_.size()))
+#
+#        x_pos = x_.to(self.device)
+#        x_pos_0 = x_pos[:, 0, :, :].to(self.device)
+#        x_pos_1 = x_pos[:, 1, :, :].to(self.device)
+#
+#        #print("xpos0, xpos1, y {} {} {}".format(x_pos_0.size(), x_pos_1.size(), y_.size()))
+#
+#        x_pos_0 = x_pos_0[y_ == 1]
+#        x_pos_1 = x_pos_1[y_ == 1]
+#        #print(x_pos_0.size())
+#        #print(x_pos_1.size())
+#        x_pos_final = torch.stack((x_pos_0, x_pos_1)).to(self.device)
+#
+#        #print("x, y {} {}".format(x_pos_final.size(), y_.size()))
+#        y_pos = torch.ones(x_pos_final.size(0)).to(self.device)
+#
+#        x_neg = x_.to(self.device)
+#        x_neg_0 = x_neg[:, 0, :, :].to(self.device)
+#        x_neg_1 = x_neg[:, 1, :, :].to(self.device)
+#
+#        #print("xneg0, xneg1, y {} {} {}".format(x_neg_0.size(), x_neg_1.size(), y_.size()))
+#        x_neg_0 = x_neg_0[y_ == 0]
+#        x_neg_1 = x_neg_1[y_ == 0]
+#        #print(x_neg_0.size())
+#        #print(x_neg_1.size())
+#        x_neg_final = torch.stack((x_neg_0, x_neg_1)).to(self.device)
+#
+#        #print("x, y {} {}".format(x_neg_final.size(), y_.size()))
+#        y_neg = torch.ones(x_neg_final.size(0)).to(self.device)
+#
+#        pos_losses = self.CE(x_pos_final, y_pos.long()).mean()  # we need the gradients
+#
+#        print("numel {}".format(x_pos_final.numel()))
+#        with torch.no_grad():
+#            neg_losses = self.CE(x_neg_final, y_neg.long())
+#
+#        _, idxs = neg_losses.topk(min(x_pos_final.numel() * self.ratio, neg_losses.numel()))
+#        neg_losses_topk = self.CE(x_neg_final[idxs], y_neg[idxs].long()).mean()
 
         # return {
         #    'loss': (3 * neg_losses_topk + pos_losses) / 4,
@@ -106,8 +124,8 @@ class CEOhem(nn.Module):
         # }
 
         # loss = 3 * neg_losses_topk + pos_losses) / 4
-        loss = (neg_losses_topk + (3 * pos_losses)) / 4
-        return loss
+#        loss = (neg_losses_topk + (3 * pos_losses)) / 4
+#        return loss
 
 class DiceLoss(nn.Module):
     def __init__(self, smooth=1., ignore_index=255):
