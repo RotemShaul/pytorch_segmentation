@@ -17,6 +17,7 @@ def get_weights(target):
 
     classes, counts = np.unique(t_np, return_counts=True)
     cls_w = np.median(counts) / counts
+    cls_w = np.array([1.0, 100.0])
     # cls_w = class_weight.compute_class_weight('balanced', classes, t_np)
     # print("classes {}".format(classes))
     # print("counts {}".format(counts))
@@ -44,8 +45,15 @@ class CrossEntropyLoss2d(nn.Module):
     def __init__(self, weight=None, ignore_index=255, reduction='mean'):
         super(CrossEntropyLoss2d, self).__init__()
         self.CE = nn.CrossEntropyLoss(weight=weight, ignore_index=ignore_index, reduction=reduction)
+        print('Using CE')
 
     def forward(self, output, target):
+        #print('in loss')
+        #print('output min, max {} {}'.format(torch.min(output), torch.max(output)))
+        #print('target min, max {} {}'.format(torch.min(target), torch.max(target)))
+        if torch.max(target) < 1:
+            print("bad crop, exiting")
+            exit(-1)
         loss = self.CE(output, target)
         return loss
 
@@ -53,74 +61,68 @@ class CrossEntropyLoss2d(nn.Module):
 class CEOhem(nn.Module):
     def __init__(self, weight=None, ignore_index=255, reduction='mean'):
         super(CEOhem, self).__init__()
-        reduction = 'none'
-        self.CE = nn.CrossEntropyLoss(weight=weight, ignore_index=ignore_index, reduction=reduction)
+        self.CE = nn.CrossEntropyLoss(weight=weight, ignore_index=ignore_index, reduction='none')
         self.device = 0
-        self.ratio = 1
+        self.ratio = 3
         print('Using ohem')
 
     def forward(self, output, target):
-        x_ = output.clone().flatten().to(self.device)
+        print("in OHEM forward")
+        x_ = output.clone()  #.flatten().to(self.device)
         y_ = target.clone().flatten().to(self.device)
-        x_pos = x_[(y_ > 0)].to(self.device)
-        y_pos = torch.ones(x_pos.shape).to(self.device)
-        x_neg = x_[(y_ == 0)].to(self.device)
-        y_neg = torch.zeros(x_neg.shape).to(self.device)
 
-        # print("#pos: {}/{}".format(x_pos.numel(), x.numel()))
-        pos_losses = self.criterion(x_pos, y_pos).mean()  # we need the gradients
+        # print("x, y {} {}".format(x_.size(), y_.size()))
+
+        x_pos = x_.to(self.device)
+        x_pos_0 = x_pos[:, 0, :, :].to(self.device)
+        x_pos_1 = x_pos[:, 1, :, :].to(self.device)
+        x_pos_0 = x_pos_0.flatten().to(self.device)
+        x_pos_1 = x_pos_1.flatten().to(self.device)
+
+        x_pos_final = torch.stack((x_pos_0[y_ == 1], x_pos_1[y_ == 1])).to(self.device)
+        x_pos_final = x_pos_final.permute(1,0)
+        print("x_pos_final size {}".format(x_pos_final.size()))
+        y_pos = torch.ones(x_pos_final.size(0)).to(self.device)
+        x_neg = x_.to(self.device)
+        x_neg_0 = x_neg[:, 0, :, :].to(self.device)
+        x_neg_1 = x_neg[:, 1, :, :].to(self.device)
+        x_neg_0 = x_neg_0.flatten().to(self.device)
+        x_neg_1 = x_neg_1.flatten().to(self.device)
+        x_neg_final = torch.stack((x_neg_0[y_ == 0], x_neg_1[y_ == 0])).to(self.device)
+        x_neg_final = x_neg_final.permute(1,0)
+        y_neg = torch.zeros(x_neg_final.size(0)).to(self.device)
+
+        pos_losses = self.CE(x_pos_final, y_pos.long()).mean()  # we need the gradients
 
         with torch.no_grad():
-            neg_losses = self.criterion(x_neg, y_neg)
+            neg_losses = self.CE(x_neg_final, y_neg.long())
+            normal_loss = self.CE(output, target).mean().item()
+            _, idxs = neg_losses.topk(min(x_pos_final.numel() * self.ratio, neg_losses.numel()))
+        
+        neg_losses_topk = self.CE(x_neg_final[idxs], y_neg[idxs].long()).mean()
 
-        _, idxs = neg_losses.topk(min(x_pos.numel() * self.ratio, neg_losses.numel()))
-        neg_losses_topk = self.criterion(x_neg[idxs], y_neg[idxs]).mean()
+        print("x_neg_final size {}".format(x_neg_final.size()))
+        print("x size {}".format(x_.size()))
 
-        return (3 * neg_losses_topk + pos_losses) / 4
+        print("Normal Loss {}".format(normal_loss))
+        print("Pos Loss {}".format(pos_losses))
+        print("Neg Loss {}".format(neg_losses))
+        print("Neg Loss topk {}".format(neg_losses_topk))
+        print("neg losses nelem {}".format(neg_losses.numel()))
+        print("x pos final nelem {}".format(x_pos_final.numel()))
 
 
-#        x_ = output.clone()  #.flatten().to(self.device)
-#        y_ = target.clone().flatten().to(self.device)
-#
-#        # print("x, y {} {}".format(x_.size(), y_.size()))
-#
-#        x_pos = x_.to(self.device)
-#        x_pos_0 = x_pos[:, 0, :, :].to(self.device)
-#        x_pos_1 = x_pos[:, 1, :, :].to(self.device)
-#        x_pos_0 = x_pos_0.flatten().to(self.device)
-#        x_pos_1 = x_pos_1.flatten().to(self.device)
-#
-#        x_pos_final = torch.stack((x_pos_0[y_ == 1], x_pos_1[y_ == 1]))).to(self.device)
-#        y_pos = torch.ones(x_pos_final.size(0)).to(self.device)
-#        x_neg = x_.to(self.device)
-#        x_neg_0 = x_neg[:, 0, :, :].to(self.device)
-#        x_neg_1 = x_neg[:, 1, :, :].to(self.device)
-#        x_neg_0 = x_neg_0.flatten().to(self.device)
-#        x_neg_1 = x_neg_1.flatten().to(self.device)
-#        x_neg_final = torch.stack((x_neg_0[y_ == 0], x_neg_1[y_ == 0])).to(self.device)
-#        y_neg = torch.zeros(x_neg_final.size(0)).to(self.device)
-#
-#        pos_losses = self.CE(x_pos_final, y_pos.long()).mean()  # we need the gradients
-#
-#        with torch.no_grad():
-#            neg_losses = self.CE(x_neg_final, y_neg.long())
-#
-#        _, idxs = neg_losses.topk(min(x_pos_final.numel() * self.ratio, neg_losses.numel()))
-#        neg_losses_topk = self.CE(x_neg_final[idxs], y_neg[idxs].long()).mean()
-#
-#        normal_loss = self.CE(output, target).mean().item()
-#        print("Normal Loss {}".format(normal_loss))
-#        # return {
-#        #    'loss': (3 * neg_losses_topk + pos_losses) / 4,
-#        #    'pos_loss': pos_losses.item(),
-#        #    'neg_loss': neg_losses.mean().item(),
-#        #    'neg_topk_loss': neg_losses_topk.item(),
-#        #    'wo_ohem_loss': criterion(seg_inputs, seg_targets).mean().item()
-#        # }
-#
-#        # loss = 3 * neg_losses_topk + pos_losses) / 4
-#        loss = (neg_losses_topk + (self.ratio * pos_losses)) / 4
-#        return loss
+        # return {
+        #    'loss': (3 * neg_losses_topk + pos_losses) / 4,
+        #    'pos_loss': pos_losses.item(),
+        #    'neg_loss': neg_losses.mean().item(),
+        #    'neg_topk_loss': neg_losses_topk.item(),
+        #    'wo_ohem_loss': criterion(seg_inputs, seg_targets).mean().item()
+        # }
+
+        # loss = 3 * neg_losses_topk + pos_losses) / 4
+        loss = (neg_losses_topk + (self.ratio * pos_losses)) / 4
+        return loss
 
 class DiceLoss(nn.Module):
     def __init__(self, smooth=1., ignore_index=255):
